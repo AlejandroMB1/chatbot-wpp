@@ -1,0 +1,17 @@
+services:
+  flask_app:
+    build: .
+    container_name: chat-bot-wpp
+    ports:
+      - "5002:5000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    networks:
+      - default-net
+
+
+networks:
+  default-net:
+    driver: bridge
