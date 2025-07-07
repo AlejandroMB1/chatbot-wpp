@@ -61,16 +61,28 @@ def send_whatsapp_message(from_id, to_number, message):
 
 @app.route('/webhooks', methods=['POST'])
 def receive_webhook():
-	data = json.loads(request.data)
-	print(data)
-	if data['object'] == "whatsapp_business_account" and data['entry'][0]['changes'][0]['field'] == "messages":
-		if data['entry'][0]['changes'][0]['value']['messages'][0]['from'] and data['entry'][0]['changes'][0]['value']['metadata']['display_phone_number']:
-			from_number = data['entry'][0]['changes'][0]['value']['messages'][0]['from'] 
-			this_number_id = data['entry'][0]['changes'][0]['value']['metadata']['phone_number_id']
-			send_whatsapp_message(this_number_id, from_number, "Hi! I've received your message.")
-			
-	else:
-		 return "Messages webhook data is not the expected", 400
+	data = request.get_json()
+	app.logger.info(f"Webhook received: {data}")
+	if data.get("object") == "whatsapp_business_account":
+		for entry in data.get("entry", []):
+			for change in entry.get("changes", []):
+				value = change.get("value", {})
+				# Check if the change is an incoming message notification
+				if value and "messages" in value:
+					metadata = value.get("metadata", {})
+					message = value.get("messages", [{}])[0]
+
+					from_number = message.get("from")
+					this_number_id = metadata.get("phone_number_id")
+
+					if from_number and this_number_id:
+						send_whatsapp_message(this_number_id, from_number, "Hi! I've received your message.")
+				elif value and "statuses" in value:
+					# This is a status update for a message we sent.
+					app.logger.info(f"Received a status update: {value.get('statuses', [{}])[0]}")
+
+	# Meta requires a 200 OK response to prevent webhook disabling.
+	return "OK", 200
 
 if __name__ == "__main__":
 	app.run(host='0.0.0.0', debug=True)
