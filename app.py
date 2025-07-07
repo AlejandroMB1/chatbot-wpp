@@ -63,7 +63,7 @@ def send_whatsapp_message(from_id, to_number, message):
 def receive_webhook():
 	data = json.loads(request.data)
 	if data['object'] == "whatsapp_business_account" and data['entry'][0]['changes'][0]['field'] == "messages":
-		if data['entry'][0]['changes'][0]['messages'][0]['from'] and data['entry'][0]['changes'][0]['value']['metadata']['display_phone_number']:
+		if data['entry'][0]['changes'][0]['value']['messages'][0]['from'] and data['entry'][0]['changes'][0]['value']['metadata']['display_phone_number']:
 			from_number = data['entry'][0]['changes'][0]['messages'][0]['from'] 
 			this_number_id = data['entry'][0]['changes'][0]['value']['metadata']['phone_number_id']
 			send_whatsapp_message(this_number_id, from_number, "Hi! I've received your message.")
