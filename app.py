@@ -20,13 +20,13 @@ def index():
 
 @app.route('/webhooks', methods=['GET'])
 def verify_webhook():
-	app.logger.info(f"Webhook verification request received: {request.args}")
+	app.logger.warning(f"Webhook verification request received: {request.args}")
 	hub_mode = request.args.get('hub.mode')
 	hub_challenge = request.args.get('hub.challenge')
 	hub_verify_token = request.args.get('hub.verify_token')
 
 	if hub_mode == SUBSCRIBE_MODE and hub_verify_token == VERIFY_TOKEN:
-			app.logger.info("Webhook verified successfully!")
+			app.logger.warning("Webhook verified successfully!")
 			return hub_challenge, 200
 		
 	app.logger.warning(f"Webhook verification failed. Token received: '{hub_verify_token}'")
@@ -52,7 +52,7 @@ def send_whatsapp_message(from_id, to_number, message):
 	try:
 		response = requests.post(url, headers=headers, json=payload)
 		response.raise_for_status()  # Raises an HTTPError for bad responses (4xx or 5xx)
-		app.logger.info(f"Message sent to {to_number}, response: {response.json()}")
+		app.logger.warning(f"Message sent to {to_number}, response: {response.json()}")
 		return True
 	except requests.exceptions.RequestException as e:
 		app.logger.error(f"Error sending message to {to_number}: {e}")
@@ -62,7 +62,7 @@ def send_whatsapp_message(from_id, to_number, message):
 @app.route('/webhooks', methods=['POST'])
 def receive_webhook():
 	data = request.get_json()
-	app.logger.info(f"Webhook received: {data}")
+	app.logger.warning(f"Webhook received: {data}")
 	if data.get("object") == "whatsapp_business_account":
 		for entry in data.get("entry", []):
 			for change in entry.get("changes", []):
@@ -79,7 +79,7 @@ def receive_webhook():
 						send_whatsapp_message(this_number_id, from_number, "Hi! I've received your message.")
 				elif value and "statuses" in value:
 					# This is a status update for a message we sent.
-					app.logger.info(f"Received a status update: {value.get('statuses', [{}])[0]}")
+					app.logger.warning(f"Received a status update: {value.get('statuses', [{}])[0]}")
 
 	# Meta requires a 200 OK response to prevent webhook disabling.
 	return "OK", 200
